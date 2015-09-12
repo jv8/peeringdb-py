@@ -15,7 +15,14 @@
 import urllib2
 import json
 import time
-from redis import Redis
+
+class MockRedis:
+    def __init__(self, **kwargs):
+        raise NotImplementedError("Redis is not installed but is required for caching. Install it or disable caching")
+try:
+    from redis import Redis
+except ImportError:
+    Redis = MockRedis
 
 
 class PeeringDB:
@@ -30,7 +37,8 @@ class PeeringDB:
         self.cache_enable = cache
         self.cache_ttl = cache_ttl
         self.cache_prefix = cache_prefix
-        self.redis = Redis(host=cache_host, port=cache_port, db=cache_db)
+        if cache:
+            self.redis = Redis(host=cache_host, port=cache_port, db=cache_db)
         return
 
     def pdb_get(self, param, cache=True):
@@ -123,7 +131,7 @@ class PeeringDB:
             asn_ixlans[asnnum] = []
             # get ixlans for each asn
             for link in asn["ixlink_set"]:
-                ixlan_id = link["ix_lan"]
+                ixlan_id = link["ixlan"]
                 asn_ixlans[asnnum].append(ixlan_id)
                 if ixlan_id not in ixlan_all:
                     ixlan_all[ixlan_id] = None
@@ -139,7 +147,9 @@ class PeeringDB:
                 ixlan_obj = self.ixlan(ixlan)
                 # grab ix object too
                 ixlan_obj["ix_obj"] = self.ix(ixlan_obj["ix"])
-                ixlan_obj["links"] = self.get_ixlanlinks(asns[asn], ixlan)
+                ixlan_obj["links"] = []
+                for asn in asns:
+                    ixlan_obj["links"].extend(self.get_ixlanlinks(asns[asn], ixlan))
                 ixlan_match.append(ixlan_obj)
 
         return ixlan_match
@@ -147,6 +157,6 @@ class PeeringDB:
     def get_ixlanlinks(self, asn, ixlan_id):
         links = []
         for link in asn["ixlink_set"]:
-            if link["ix_lan"] == ixlan_id:
+            if link["ixlan"] == ixlan_id:
                 links.append(link)
         return links

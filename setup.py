@@ -16,7 +16,7 @@ from distutils.core import setup
 setup(
   name = 'peeringdb',
   packages = ['peeringdb'], # this must be the same as the name above
-  version = '0.3.1',
+  version = '0.3.3',
   description = 'PeeringDB API Python library',
   author = 'Nat Morris',
   author_email = 'nat@netflix.com',
@@ -24,6 +24,9 @@ setup(
   download_url = 'https://github.com/netflix/peeringdb-py/tarball/master',
   keywords = ['peering', 'peeringdb', 'bgp'],
   license = 'Apache 2.0',
+  install_requires = [
+    'redis',
+  ],
   classifiers = [
     'Development Status :: 4 - Beta',
     'Intended Audience :: Developers',
